@@ -1,0 +1,48 @@
+# Step 1: Choose a stable Python image as base image
+FROM python:3.13.3-slim-bookworm AS builder
+
+ARG source
+
+# Step 2: Set a temporary Working Directory
+WORKDIR /temp
+
+# Step 3: update package index and install build essentials and libmagic, then remove package lists if any.
+RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
+
+# Step 4: upgrade pip to its latest manager.
+RUN pip install --upgrade pip wheel
+
+# Step 5: Copy the requirements.txt in /temp/dependencies.
+COPY /${source}/deployment/requirements.txt /temp/dependencies/
+
+# Step 6: Build Dependencies into .whl Files and Cache Them in /root/.cache/pip (default caching dir for pip) 
+# on host machine.
+RUN --mount=type=cache,target=/root/.cache/pip \
+pip wheel --wheel-dir /temp/wheels -r /temp/dependencies/requirements.txt
+
+
+
+
+# Stage 2
+FROM python:3.13.3-slim-bookworm AS runtime
+
+ARG source
+
+# Step 1 : Set ENV variables to avoid creating pyc and to not buffer python output
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Step 2: Set a Working Directory
+WORKDIR /${source}
+
+# Step 3: update package index and install build essentials and libmagic, then remove package lists if any.
+RUN apt-get update && apt-get install -y libpq-dev procps && rm -rf /var/lib/apt/lists/*
+
+# Step 4: Copy Cached .whl Files from the Build Stage
+COPY --from=builder /temp/wheels /${source}/wheels
+
+# Step 5: upgrade pip to its latest manager && Install Dependencies from the Cached .whl Files
+RUN pip install --upgrade pip wheel && pip install --no-cache-dir /${source}/wheels/* && rm -rf /${source}/wheels
+
+# Run app
+# streamlit run 1_💬_Chat.py --server.port=8501 --server.address=0.0.0.0

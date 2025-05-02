@@ -1,0 +1,7 @@
+# Using official pgvector Postgres image
+FROM pgvector/pgvector:pg17
+
+ARG source
+
+# Copy the init SQL into initiating dir
+COPY /${source}/init.sql /docker-entrypoint-initdb.d/init.sql

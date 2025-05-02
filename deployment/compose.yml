@@ -1,0 +1,90 @@
+name: JK Tech
+services:
+  backend:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    build:
+      context: ..
+      dockerfile: ${BACKEND}/deployment/dockerfile
+      args:
+        source: ${BACKEND}
+    ports:
+      - "8000:8000"
+    image: backend:1.0.1
+    container_name: Backend
+    restart: "no"
+    stdin_open: true                      # Keeps stdin open so you can interact with the shell
+    tty: true                             # Allocates a pseudo-TTY for an interactive session
+    env_file:
+      - .env
+    volumes:
+      - ../${BACKEND}:/${BACKEND}               # Bind Mount source code
+    networks:
+      - app    
+    
+
+    # Dev/UAT containers shall ran through external commands, not entrypoints.
+    command: ["/bin/bash"]
+
+
+  frontend:
+    depends_on:
+      - backend
+    build:
+      context: ..
+      dockerfile: ${FRONTEND}/deployment/dockerfile
+      args:
+        source: ${FRONTEND}
+    ports:
+      - "8501:8501"
+    image: frontend:1.0.1
+    container_name: Frontend
+    restart: "no"
+    stdin_open: true                      # Keeps stdin open so you can interact with the shell
+    tty: true                             # Allocates a pseudo-TTY for an interactive session
+    env_file:
+      - .env
+    volumes:
+      - ../${FRONTEND}:/${FRONTEND}          # Bind Mount source code
+    networks:
+      - app
+
+    
+    # Dev/UAT containers shall ran through external commands, not entrypoints.
+    command: ["/bin/bash"]
+
+    # fastapi-container manual management
+    # - docker exec -it AWS-Lambda /bin/sh
+    # - ps aux # list all running processes in contianer
+    # - kill -QUIT <PID>  # Gracefully stop a process
+    # - Restart AWS-Lambda container
+ 
+  postgres:
+    container_name: PgVector
+    build:
+      context: ..
+      dockerfile: ${DATABASE}/dockerfile
+      args:
+        source: ${DATABASE}
+    image: pgvector:1.0.1
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ../${DATABASE}/${STORE}:/var/lib/postgresql/data                    # Bind Mount postgres storage
+    ports:
+      - "5432:5432"
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+networks:
+  app:
+    driver: bridge
+  
+
