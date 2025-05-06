@@ -1,9 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from schema import *
 
-# from langchain_utils import get_rag_chain
-from db_utils import *
-from chroma_utils import *
 import os
 import uuid
 import shutil

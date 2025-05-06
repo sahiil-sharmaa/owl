@@ -72,7 +72,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ../${DATABASE}/${STORE}:/var/lib/postgresql/data                    # Bind Mount postgres storage
+      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
@@ -86,5 +86,8 @@ services:
 networks:
   app:
     driver: bridge
+
+volumes:
+  pgdata:
   
 
