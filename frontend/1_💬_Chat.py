@@ -5,8 +5,9 @@ from api import model_api, document_api, chat_api
 
 # Page title and config
 st.set_page_config(page_title="FYND - Document Insights", page_icon="🔍",layout="wide")
-st.title("🔍 FYND - Document Insights")
+st.image('fynd.png', width=700)
 st.markdown("<br><br>", unsafe_allow_html=True)
+
 
 
 # --- Initialize session state with default values ---

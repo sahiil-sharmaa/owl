@@ -2,4 +2,7 @@
 runOnSave = true
 
 [theme]
-base = "dark"
+primaryColor="#b796ff"
+backgroundColor="#f5f5f5"
+secondaryBackgroundColor="#e4e9f7"
+textColor="#29358e"

@@ -5,7 +5,7 @@ import api.model_api as model_api
 
 # Page title and config
 st.set_page_config(page_title="FYND - Document Insights", page_icon="🔍", layout="wide")
-st.title("📁 Document Library")
+st.title("📁 Library")
 st.markdown("<br><br>", unsafe_allow_html=True)
 
 
