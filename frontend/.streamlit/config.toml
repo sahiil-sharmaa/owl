@@ -2,7 +2,7 @@
 runOnSave = true
 
 [theme]
-primaryColor="#b796ff"
-backgroundColor="#f5f5f5"
-secondaryBackgroundColor="#e4e9f7"
-textColor="#29358e"
+primaryColor="#62aef3"
+backgroundColor="#0b3641"
+secondaryBackgroundColor="#507c8a"
+textColor="#d1e6e8"
