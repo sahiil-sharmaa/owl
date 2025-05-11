@@ -26,104 +26,117 @@ if "persona" not in st.session_state:
     persona_options = model_api.get_model_persona()
     st.session_state.persona = persona_options[0]
 
+# Refresh document list if needed
+if "documents" not in st.session_state:
+    st.session_state.documents = doc_api.list_all()
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "session_id" not in st.session_state:
     st.session_state.session_id = None
 
+#------------------- INITIALIZE SESSION STATE -----------------------------#
+
+
+
+
+
+
+
 
 
 #------------------- UPLOADED DOCUMENTS -----------------------------#
 
-st.subheader("Uploaded Documents")
-st.markdown("<br>", unsafe_allow_html=True)
-
-# check if doc list is present in session
-if "documents" not in st.session_state:
-
-    # Fetch doc list from DB
-    st.session_state.documents = doc_api.list_all()
-
-
-# display docs present in library (uploaded docs)
 documents = st.session_state.documents
-if documents:
 
-    # Append each document in formated_docs matrix
-    formated_docs = []
+with st.container(border= True):
 
-    for doc in documents:
+    st.subheader("Uploaded Documents")
+    # st.markdown("<br>", unsafe_allow_html=True)
 
-        timestamp = datetime.fromisoformat(doc['uploaded_at'])
-        formatted_timestamp = timestamp.strftime("%d %b %Y, %I:%M %p")
+    if documents:
+        # Append each document in formatted_docs matrix
+        formatted_docs = []
 
-        current_doc = {
-            'ID': str(doc['id']),
-            'Name' : str(doc['name']),
-            'Status' : "Embedded" if doc['is_active'] else "Not Embedded",
-            'Uploaded' : formatted_timestamp
-        }
-        formated_docs.append(current_doc)
+        for doc in documents:
 
-    st.dataframe(formated_docs,hide_index=True,key='uploaded_files')
+            timestamp = datetime.fromisoformat(doc['uploaded_at'])
+            formatted_timestamp = timestamp.strftime("%d %b %Y, %I:%M %p")
 
-else:
-    st.info("No Document to show, Upload new Documents from below", icon=":material/exclamation:")
+            current_doc = {
+                'ID': str(doc['id']),
+                'Name' : str(doc['name']),
+                'Status' : "Embedded" if doc['is_active'] else "Not Embedded",
+                'Uploaded' : formatted_timestamp
+            }
+            formatted_docs.append(current_doc)
 
-# refresh and fetch docs list again if needed.
-if st.button("Refresh Document List",icon=":material/refresh:"):
-    with st.spinner("Refreshing..."):
-        st.session_state.documents = doc_api.list_all()
+        st.dataframe(formatted_docs,hide_index=True,key='uploaded_files')
 
-# Panel Ended
-st.divider() 
+    else:
+        st.info('Library is empty, Uploaded documents will be shown here.', icon = ":material/error:")
+
+
+
+
+
+
 
 
 #------------------- UPLOAD NEW DOCUMENT -----------------------------#
 
-st.subheader("Upload Document")
-added_files = st.file_uploader(
-    label="Upload new Documents",
-    label_visibility='hidden',
-    type=["pdf", "docx"], 
-    accept_multiple_files=True,
-    key="file_uploader"
-)
 
+with st.container(border=True):
 
-if added_files:
-    if st.button("Upload All"):
-        with st.spinner("Uploading documents..."):
-            
-            success = 0
-            for file in added_files:
-                upload_response = doc_api.upload(file)
+    st.subheader("Upload Document")
+
+    added_files = st.file_uploader(
+        label="Upload new Documents",
+        label_visibility='hidden',
+        type=["pdf", "docx"], 
+        accept_multiple_files=True,
+        key="file_uploader"
+    )
+
+    # add upload button
+    upload_btn = st.button("Upload",icon = ":material/database_upload:")
+
+    if upload_btn:  
+        if added_files:
+            with st.spinner("Uploading documents..."):
                 
-                if upload_response:
-                    success += 1
+                success = 0
+                for file in added_files:
+                    upload_response = doc_api.upload(file)
                     
-            if success == len(added_files):
-                st.success(f"All files were uploaded Successfully")
-            
-            elif success < len(added_files):
-                st.error(f"Upload Failed, some files were not uploaded")
+                    if upload_response:
+                        success += 1
+                        
+                if success == len(added_files):
+                    st.toast("All files were uploaded Successfully", icon=":material/check:")
 
-            # Refresh document list from backend
+                elif success < len(added_files):
+                    st.toast("Upload Failed, some files were not uploaded", icon=":material/error:")
+
+            # update session state with latest document list
             st.session_state.documents = doc_api.list_all()
-            st.info("Refresh Document list after uploading new files", icon=":material/exclamation:")
+                    
+        else:
+            st.toast("Minimum 1 file is needed to Upload", icon=":material/exclamation:")
 
-# Panel Ended
-st.divider() 
+
+
 
 #------------------------ NEW DELETE DOCS ----------------------------#
 
+documents = st.session_state.documents 
 
 if documents:
     
     # Document deletion form.
 
-    with st.form("delete_form"):
+    with st.container(border=True):
     
         st.subheader("Delete Document from Library")
         st.markdown("<br>", unsafe_allow_html=True)
@@ -137,7 +150,7 @@ if documents:
                     selected_docs.append(doc)
 
         # Submit button
-        delete = st.form_submit_button("🗑️ Delete Selected")
+        delete = st.button("🗑️ Delete Selected")
 
     # Handle deletion
     if delete:
@@ -161,11 +174,7 @@ if documents:
 
             # refresh list, and update session list.
             st.session_state.documents = doc_api.list_all() 
-            st.info("Refresh file list after delete", icon=":material/exclamation:")
-        
-
-
-
+            
 
 
 #------------------- DELETE DOCUMENT -----------------------------#
